@@ -72,6 +72,46 @@ Node.prototype._sm_hasGradient = function(){
     return getComputedStyle(this)["background-image"].match(/gradient/) !== null;
 };
 
+Node.prototype._sm_eq = function(x){
+    return x._sm_getStyle("width") === this._sm_getStyle("width") && x._sm_getStyle("height") === this._sm_getStyle("height");
+};
+
+Node.prototype._sm_lt = function(x){
+    return parseInt(this._sm_getStyle("width")) < parseInt(x._sm_getStyle("width")) && parseInt(this._sm_getStyle("height")) < parseInt(x._sm_getStyle("height"));
+};
+
+Node.prototype._sm_gt = function(x){
+    return !this._sm_lt(x);
+};
+
+Node.prototype._sm_calculateBgColor = function(){
+    var color = this._sm_getStyle("background-color");
+    return (color !== theme.bg && color !== theme.transparent) ? theme.bg : color;
+};
+
+Node.prototype._sm_hasImageSibling = function(){
+    var me = this;
+    return Array.prototype.filter.call(this.parentNode.childNodes,function(x){
+        return (me !== x && x.tagName === "IMG" && x._sm_eq(me));
+    }).length > 0 || Array.prototype.filter.call(this.parentNode.parentNode.childNodes,function(x){
+        return (me !== x && x.tagName === "IMG" && x._sm_eq(me));
+    }).length > 0;
+};
+
+Node.prototype._sm_fixBorder = function(){
+    return true;
+    // if(this._sm_getStyle("border-width")
+};
+
+Node.prototype._sm_overlflowImage = function(){
+    var me = this;
+    return Array.prototype.filter.call(this.parentNode.childNodes,function(x){
+        return (me !== x && x.tagName === "IMG" && x._sm_gt(me));
+    }).length > 0 || Array.prototype.filter.call(this.parentNode.parentNode.childNodes,function(x){
+        return (me !== x && x.tagName === "IMG" && x._sm_gt(me));
+    }).length > 0;
+};
+
 
 var config =
     {
@@ -85,10 +125,12 @@ var config =
                 header: "rgb(150,150,150)",
                 images: "grayscale(100%)",
                 transparent: "transparent",
+                borderColor: "rgb(50,50,50)",
+                borderWidth: "2px",
                 smoozy: new Color("rgb(150,150,150)")
             }
         },
-        blacklist: {"META":true,"SCRIPT":true,"HEAD":true,"HTML":true}
+        blacklist: {"META":true,"SCRIPT":true,"HEAD":true,"HTML":true,"OBJECT":true,"IFRAME":true}
     }
 , theme = config.themes.evening
 ;
@@ -101,7 +143,7 @@ function makeCssRule(x){
 
 function smoozify(x){
     if (smoozify.cache === undefined){
-        smoozify.cache = {};
+        smoozify.cache = {html: {"background-color": theme.bg}};
     }
     var sel = x._sm_selector();
     if(smoozify.cache[sel] !== undefined){
@@ -118,59 +160,78 @@ function smoozify(x){
         $["text-decoration"] = "underline";
         if(x._sm_hasImage()){
             if(x._sm_isWallpaper()){
-                $["background-color"] = "none";
+                // $["background-color"] = "none"; // 1
+                $["background-color"] = x._sm_calculateBgColor();
             } else {
-                $["background-color"] = theme.bg;
+                // $["background-color"] = theme.bg; // 1
+                $["background-color"] = x._sm_calculateBgColor();
                 $["filter"] = theme.images;
                 $["-webkit-filter"] = theme.images;
             }
         } else {
-            if(x.parentNode._sm_hasImage()){
-                $["background-color"] = "transparent";
-            } else if(x.parentNode._sm_getStyle("width") === x._sm_getStyle("width")){
-                $["background-color"] = theme.transparent;
-            }else{
-                $["background-color"] = theme.transparent;
-                // $["background-color"] = config.themes.evening.bg;
-            }
+            // $["background-color"] = x._sm_calculateBgColor();
+            $["background-color"] = theme.transparent;
+            // if(x.parentNode._sm_hasImage()){
+            //     $["background-color"] = "transparent";
+            //     // $["background-color"] = x._sm_calculateBgColor();
+            // } else if(x.parentNode._sm_getStyle("width") === x._sm_getStyle("width")){
+            //     $["background-color"] = theme.transparent;                
+            // }else{
+            //     $["background-color"] = theme.transparent;
+            //     // $["background-color"] = config.themes.evening.bg;
+            // }
         }
         break;
     case "H1":
     case "H2":
     case "H3":
-        $["background-color"] = theme.transparent;
-        $["color"] = config.themes.evening.header;
+        // $["background-color"] = theme.transparent;
+        $["background-color"] = x._sm_calculateBgColor();
+        $["color"] = theme.header;
         break;
     case "IMG":
-        $["filter"] = config.themes.evening.images;
-        $["-webkit-filter"] = config.themes.evening.images;
+        $["filter"] = theme.images;
+        $["-webkit-filter"] = theme.images;
         break;
-    case "BODY":
+    case "SECTION":
+        $1["background"] = config.themes.evening.BG;
+        $2["background"] = config.themes.evening.BG;
         $["background"] = "none repeat scroll 0% 0% rgb(90,90,90)";
-        $["color"] = config.themes.evening.fg;
+        break;
+    case "BODY":    
+        $["background"] = "none repeat scroll 0% 0% rgb(90,90,90)";
+        $["color"] = theme.fg;
         break;
     case "SPAN":        
-        $["color"] = config.themes.evening.fg;
+        $["color"] = theme.fg;
         if(x._sm_hasImage()){
-            if(x._sm_isWallpaper()){
-                // $["background"] = "none no-repeat scroll 0% 0% rgb(90,90,90)";
-            }else{
-                $["filter"] = config.themes.evening.images;
-                $["-webkit-filter"] = config.themes.evening.images;
-            }
+            $["filter"] = config.themes.evening.images;
+            $["-webkit-filter"] = config.themes.evening.images;
+            
+            // if(x._sm_isWallpaper()){
+            //     // $["background"] = "none no-repeat scroll 0% 0% rgb(90,90,90)";
+            // }else{
+            //     $["filter"] = config.themes.evening.images;
+            //     $["-webkit-filter"] = config.themes.evening.images;
+            // }
         } else {
             if(x.parentNode._sm_hasImage()){
-                $["background-color"] = "transparent";
+                //$["background-color"] = theme.transparent;
+                $["background-color"] = x._sm_calculateBgColor();
             } else if(x.parentNode._sm_getStyle("width") === x._sm_getStyle("width")){
-                $["background-color"] = theme.transparent;                
+                //$["background-color"] = theme.transparent;
+                $["background-color"] = x._sm_calculateBgColor();
             }else{
                 // $["background"] = theme.BG;                
-                $["background-color"] = config.themes.evening.bg;
+                $["background-color"] = x._sm_calculateBgColor();
             }
         }
         break;
+    // case "SECTION":
+    //     $["background-color"] = x._sm_calculateBgColor();
+    //     break;
     case "P":
-        $["background-color"] = "none";
+        $["background-color"] = "none";        
         $["color"] = config.themes.evening.fg;
         break;
     case "BUTTON":
@@ -182,33 +243,41 @@ function smoozify(x){
         $["color"] = config.themes.evening.fg;
         break;
     case "I":
+        $["background-color"] = x._sm_calculateBgColor();
+        $["color"] = theme.fg;
+        break;
+    case "EM":    
         $["background-color"] = "none";
         $["color"] = config.themes.evening.fg;
         break;
     default:
         $["color"] = config.themes.evening.fg;
-        // $1["background-color"] = config.themes.evening.bg;
-        // $2["background-color"] = config.themes.evening.bg;
         $1["background"] = config.themes.evening.BG;
         $2["background"] = config.themes.evening.BG;
         if(x._sm_hasImage()){
             if(x._sm_isWallpaper()){
-                $["background-color"] = "none";//config.themes.evening.bg;
+                $["background-color"] = x._sm_calculateBgColor();
+                // $["background-color"] = theme.transparent;
                 $["background"] = "none no-repeat scroll 0% 0%";
             } else {                
-                $["background-color"] = config.themes.evening.bg;
+                // $["background-color"] = config.themes.evening.bg; //1
+                $["background-color"] = x._sm_calculateBgColor();
                 $["filter"] = config.themes.evening.images;
                 $["-webkit-filter"] = config.themes.evening.images;
             }
+        } else if(x._sm_hasImageSibling() || x._sm_overlflowImage() || (x._sm_gt(x.parentNode) && x._sm_getStyle("background-color") === x.parentNode._sm_getStyle("background-color"))){
+            //$["background-color"] = theme.transparent;
+            $["background-color"] = x._sm_calculateBgColor();
         }else{
-            // $["background"] = config.themes.evening.BG;            
             if(x._sm_hasGradient()){
                 $["background"] = theme.BG;
             }else{
-                $["background-color"] = theme.bg;
+                $["background-color"] = x._sm_calculateBgColor();
+                // $["background-color"] = theme.bg;
             }
         }
     }
+    x._sm_fixBorder();
 }
 
 Array.prototype.forEach.call(
