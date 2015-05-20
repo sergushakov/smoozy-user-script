@@ -98,9 +98,15 @@ Node.prototype._sm_hasImageSibling = function(){
     }).length > 0;
 };
 
+Node.prototype._sm_isInFrame = function(){
+    return this._sm_getStyle("border-left-width") !== "0px" && this._sm_getStyle("border-right-width") !== "0px" && this._sm_getStyle("border-top-width") !== "0px" && this._sm_getStyle("border-bottom-width") !== "0px";
+};
+
 Node.prototype._sm_fixBorder = function(){
-    return true;
-    // if(this._sm_getStyle("border-width")
+    // return true;
+    if(this._sm_getStyle("border-top-width") !== "0px"){
+        
+    }
 };
 
 Node.prototype._sm_overlflowImage = function(){
@@ -155,37 +161,25 @@ function smoozify(x){
     }
     switch (x.tagName){
     case "A":
-        $["background-color"] = "none";
+        // $["background-color"] = "none";
         $["color"] = theme.link;
         $["text-decoration"] = "underline";
         if(x._sm_hasImage()){
             if(x._sm_isWallpaper()){
-                // $["background-color"] = "none"; // 1
                 $["background-color"] = x._sm_calculateBgColor();
             } else {
-                // $["background-color"] = theme.bg; // 1
                 $["background-color"] = x._sm_calculateBgColor();
-                $["filter"] = theme.images;
+                $["filter"] = theme.images;                
                 $["-webkit-filter"] = theme.images;
             }
         } else {
-            // $["background-color"] = x._sm_calculateBgColor();
-            $["background-color"] = theme.transparent;
-            // if(x.parentNode._sm_hasImage()){
-            //     $["background-color"] = "transparent";
-            //     // $["background-color"] = x._sm_calculateBgColor();
-            // } else if(x.parentNode._sm_getStyle("width") === x._sm_getStyle("width")){
-            //     $["background-color"] = theme.transparent;                
-            // }else{
-            //     $["background-color"] = theme.transparent;
-            //     // $["background-color"] = config.themes.evening.bg;
-            // }
+            $["background-color"] = x._sm_calculateBgColor();
+            // $["background-color"] = theme.transparent;
         }
         break;
     case "H1":
     case "H2":
     case "H3":
-        // $["background-color"] = theme.transparent;
         $["background-color"] = x._sm_calculateBgColor();
         $["color"] = theme.header;
         break;
@@ -203,33 +197,20 @@ function smoozify(x){
         $["color"] = theme.fg;
         break;
     case "SPAN":        
-        $["color"] = theme.fg;
+        $["color"] = theme.fg;        
         if(x._sm_hasImage()){
             $["filter"] = config.themes.evening.images;
             $["-webkit-filter"] = config.themes.evening.images;
-            
-            // if(x._sm_isWallpaper()){
-            //     // $["background"] = "none no-repeat scroll 0% 0% rgb(90,90,90)";
-            // }else{
-            //     $["filter"] = config.themes.evening.images;
-            //     $["-webkit-filter"] = config.themes.evening.images;
-            // }
         } else {
             if(x.parentNode._sm_hasImage()){
-                //$["background-color"] = theme.transparent;
                 $["background-color"] = x._sm_calculateBgColor();
             } else if(x.parentNode._sm_getStyle("width") === x._sm_getStyle("width")){
-                //$["background-color"] = theme.transparent;
                 $["background-color"] = x._sm_calculateBgColor();
             }else{
-                // $["background"] = theme.BG;                
                 $["background-color"] = x._sm_calculateBgColor();
             }
         }
         break;
-    // case "SECTION":
-    //     $["background-color"] = x._sm_calculateBgColor();
-    //     break;
     case "P":
         $["background-color"] = "none";        
         $["color"] = config.themes.evening.fg;
@@ -252,32 +233,38 @@ function smoozify(x){
         break;
     default:
         $["color"] = config.themes.evening.fg;
-        $1["background"] = config.themes.evening.BG;
-        $2["background"] = config.themes.evening.BG;
+        $1["background"] = theme.BG;
+        $2["background"] = theme.BG;
+        // if(x._sm_isInFrame()){
+        //     $["border-width"] = theme.borderWidth;
+        //     $["border-color"] = theme.borderColor;
+        // }
+        // x._sm_fixBorder();
         if(x._sm_hasImage()){
             if(x._sm_isWallpaper()){
                 $["background-color"] = x._sm_calculateBgColor();
                 // $["background-color"] = theme.transparent;
                 $["background"] = "none no-repeat scroll 0% 0%";
             } else {                
-                // $["background-color"] = config.themes.evening.bg; //1
                 $["background-color"] = x._sm_calculateBgColor();
                 $["filter"] = config.themes.evening.images;
                 $["-webkit-filter"] = config.themes.evening.images;
             }
         } else if(x._sm_hasImageSibling() || x._sm_overlflowImage() || (x._sm_gt(x.parentNode) && x._sm_getStyle("background-color") === x.parentNode._sm_getStyle("background-color"))){
-            //$["background-color"] = theme.transparent;
             $["background-color"] = x._sm_calculateBgColor();
         }else{
             if(x._sm_hasGradient()){
                 $["background"] = theme.BG;
             }else{
                 $["background-color"] = x._sm_calculateBgColor();
-                // $["background-color"] = theme.bg;
             }
         }
     }
-    x._sm_fixBorder();
+    if(x._sm_isInFrame()){
+        $["border-width"] = theme.borderWidth;
+        $["border-color"] = theme.borderColor;
+    }
+    
 }
 
 Array.prototype.forEach.call(
